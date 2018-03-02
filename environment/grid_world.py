@@ -41,4 +41,10 @@ class GridWorld:
                 return [new_x, new_y, 0.9]
             elif new_y == self.size - 1:
                 return [new_x, new_y, 0.7]
-        elif:
+        elif new_x == self.size - 1:
+            if new_y == 0:
+                return [new_x, new_y, 1.0]
+            elif new_y == self.size - 1:
+                return [new_x, new_y, 0.8]
+
+        return [new_x, new_y, -1.0]
