@@ -2,19 +2,19 @@ from utils import move, assign_probs
 
 
 class GridWorld:
-    # GridWord initialization:
-    # args:
-    #   good_acts: indicating what are good actions in this girdworld.
-    #   size: since gridworld is a square, we need the side length
+    '''GridWord initialization:
+        args:
+            good_acts: indicating what are good actions in this girdworld.
+            size: since gridworld is a square, we need the side length'''
     def __init__(self, good_acts, size):
         self.good_acts = good_acts
         self.size = size
 
-    # funtion used for an agent to take an action
-    # args:
-    #   x, y: coordinates of the agent
-    #   action: in {1, 2, 3, 4}, the action agent wants to take.
-    #   1 up 2 down 3 left 4 right
+    '''funtion used for an agent to take an action
+        args:
+            x, y: coordinates of the agent
+            action: in {1, 2, 3, 4}, the action agent wants to take.
+            1 up 2 down 3 left 4 right'''
     def take_action(self, x, y, action):
         # assign probability according to the chosen action
         # and the good action set
