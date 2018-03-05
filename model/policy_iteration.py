@@ -1,4 +1,4 @@
-from utils import assign_probs
+import copy
 
 
 class PolicyIteration:
@@ -47,7 +47,7 @@ class PolicyIteration:
                 if j == size - 1:
                     self.invalid_acts[(i, j)] += [1]
 
-        self.action_dict = {
+        self.direct_dict = {
             0: [0, 0],
             1: [0, 1],
             2: [0, -1],
@@ -64,4 +64,91 @@ class PolicyIteration:
         5 possible moves'''
     def get_transition_prob(self, x, y, action):
         probs = [0.0 for _ in range(5)]
-        
+        if action in self.good_acts:
+            for i in range(1, 5):
+                if i == action:
+                    if i not in self.invalid_acts[(x, y)]:
+                        probs[i] = 0.85
+                    else:
+                        probs[0] += 0.85
+                else:
+                    if i not in self.invalid_acts[(x, y)]:
+                        probs[i] = 0.05
+                    else:
+                        probs[0] += 0.05
+        else:
+            probs[0] = 0.85
+            for i in range(1, 5):
+                if i not in self.invalid_acts[(x, y)]:
+                    probs[i] = 0.0375
+                else:
+                    probs[4] += 0.0375
+
+        return probs
+
+    ''' The actual policy iteration algorithm'''
+    def policy_iteration(self):
+        # Boolean if the policy has changed in the last iter
+        changed = True
+
+        while changed:
+            # Build a temporary value matrix
+            temp_value_matrix = [
+                [0.0 for _ in range(self.size)]
+                for _ in range(self.size)
+            ]
+
+            # loop through all states to make updates
+            # on the temporary value matrix
+            for x in range(self.size):
+                for y in range(self.size):
+                    # Disable next iteration if nothing changed
+                    changed = False
+
+                    # q vector of all 4 actions
+                    q = [0.0 for _ in range(4)]
+
+                    # initialize best action and best q_value
+                    best_action = -1
+                    best_q = -100000.0
+
+                    # compute q value for each state and each action
+                    for i in range(4):
+                        # Compute transition probability according to
+                        # the current behavior i
+                        probs = self.get_transition_prob(x, y, i + 1)
+
+                        # sum up values from each direction
+                        for j in range(5):
+                            if probs[j] == 0:
+                                continue
+
+                            # get the intended move direction
+                            movement = self.direct_dict[j]
+
+                            new_x = x + movement[0]
+                            new_y = x + movement[1]
+
+                            # get reward
+                            reward = self.reward_matrix[new_x][new_y]
+
+                            # get value of next state
+                            next_state_value = self.value_matrix[new_x][new_y]
+
+                            # add projected value to q value of current action
+                            q[i] += probs[j] * (reward + next_state_value)
+
+                        # Update the current best policy
+                        if q[i] > best_q:
+                            best_q = q[i]
+                            best_action = i + 1
+
+                        if best_action != self.policy_matrix[x][y]:
+                            changed = True
+                            self.policy_matrix[x][y] = best_action
+
+                        temp_value_matrix[x][y] = best_q
+
+                self.value_matrix = copy.deepcopy(temp_value_matrix)
+
+            return self.policy_matrix
