@@ -25,8 +25,6 @@ def get_optimal_mu(size, good_acts, i, j):
     t = 1.0
 
     while t < 100.0 or delta > 0.0001:
-        print([x, y])
-        print(optimal_policy[x][y])
         x, y, r = gridworld.take_action(x, y, optimal_policy[x][y])
         new_total_reward = (total_reward * (t - 1) + r) / t
         delta = math.fabs(new_total_reward - total_reward)

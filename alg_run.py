@@ -1,7 +1,7 @@
 from model.RLPA import rlpa
 import pickle
 
-T = 10
+T = 100000
 
 good_actions = [
     [1],
@@ -42,3 +42,4 @@ for i in scenarios[0]:
         open('optimal_policies/mdp_{0}_size_{1}'.format(str(i), str(0)), 'rb')
     )
 regret_rlpa = rlpa(policy_lib, 0.005, sizes[0], good_actions[0], T, 0, 0)
+print(regret_rlpa)

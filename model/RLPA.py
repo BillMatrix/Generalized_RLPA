@@ -78,7 +78,7 @@ def rlpa(policy_lib, delta, size, good_acts, T, index_act, index_size):
             m_B = max_B_key
 
             while t_i <= T_i and t <= T and v[m_B] <= n[m_B] \
-                and mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) > c[m_B] \
+                and mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) <= c[m_B] \
                     + complex_bound(H_hat, t, delta, n[m_B], 0, K[m_B]):
                 t_i += 1
 
