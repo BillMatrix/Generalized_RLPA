@@ -27,13 +27,13 @@ class GridWorld:
         new_x = x
         new_y = y
 
-        if move_direction == 1 and y < self.size:
+        if move_direction == 1 and y < self.size - 1:
             new_y += 1
         elif move_direction == 2 and y > 0:
             new_y -= 1
         elif move_direction == 3 and x > 0:
             new_x -= 1
-        elif move_direction == 4 and x < self.size:
+        elif move_direction == 4 and x < self.size - 1:
             new_x += 1
 
         if new_x == 0:

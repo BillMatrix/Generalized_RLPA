@@ -17,7 +17,7 @@ good_actions = [
 ]
 size = [i for i in range(3, 11)]
 
-for i in range(11):
+for i in range(len(good_actions)):
     for j in range(len(size)):
         grid_world_solver = PolicyIteration(size[j], good_actions[i])
 
