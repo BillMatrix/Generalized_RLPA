@@ -82,7 +82,7 @@ class PolicyIteration:
                 if i not in self.invalid_acts[(x, y)]:
                     probs[i] = 0.0375
                 else:
-                    probs[4] += 0.0375
+                    probs[0] += 0.0375
 
         return probs
 
@@ -90,21 +90,23 @@ class PolicyIteration:
     def policy_iteration(self):
         # Boolean if the policy has changed in the last iter
         changed = True
+        count = 0
 
         while changed:
+            count += 1
             # Build a temporary value matrix
             temp_value_matrix = [
                 [0.0 for _ in range(self.size)]
                 for _ in range(self.size)
             ]
 
+            # Disable next iteration if nothing changed
+            changed = False
+
             # loop through all states to make updates
             # on the temporary value matrix
             for x in range(self.size):
                 for y in range(self.size):
-                    # Disable next iteration if nothing changed
-                    changed = False
-
                     # q vector of all 4 actions
                     q = [0.0 for _ in range(4)]
 
@@ -127,7 +129,7 @@ class PolicyIteration:
                             movement = self.direct_dict[j]
 
                             new_x = x + movement[0]
-                            new_y = x + movement[1]
+                            new_y = y + movement[1]
 
                             # get reward
                             reward = self.reward_matrix[new_x][new_y]
@@ -143,12 +145,12 @@ class PolicyIteration:
                             best_q = q[i]
                             best_action = i + 1
 
-                        if best_action != self.policy_matrix[x][y]:
-                            changed = True
-                            self.policy_matrix[x][y] = best_action
+                    if best_action != self.policy_matrix[x][y]:
+                        changed = True
+                        self.policy_matrix[x][y] = best_action
 
-                        temp_value_matrix[x][y] = best_q
+                    temp_value_matrix[x][y] = best_q
 
-                self.value_matrix = copy.deepcopy(temp_value_matrix)
+            self.value_matrix = copy.deepcopy(temp_value_matrix)
 
-            return self.policy_matrix
+        return self.policy_matrix, count
