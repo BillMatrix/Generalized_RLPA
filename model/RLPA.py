@@ -1,27 +1,7 @@
 from environment.grid_world import GridWorld
-import math
 import numpy as np
 from optimal_mu import get_optimal_mu
-
-
-'''
-Compute Span
-    args:
-        T_i: episode length
-    rets:
-        H_hat'''
-def span(T_i):
-    return math.log(T_i)
-
-
-'''
-Compute the complex bound
-    args: H_hat, t, delta, n, v, k
-    rets: bound '''
-def complex_bound(H_hat, t, delta, n, v, k):
-    first_term = math.sqrt(48.0 * math.log(2.0 * t / delta) / (n + v))
-    second_term = H_hat * k / (n + v)
-    return (H_hat + 1) * first_term + second_term
+from utils import span, complex_bound
 
 
 ''' RLPA Algorithm
