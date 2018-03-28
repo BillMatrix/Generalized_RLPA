@@ -1,5 +1,4 @@
 from environment.grid_world import GridWorld
-import math
 import numpy as np
 from optimal_mu import get_optimal_mu
 from utils import span, complex_bound
@@ -12,7 +11,11 @@ from utils import span, complex_bound
         size, good_acts: parameters for gridworld
         T: time horizon
         '''
-def general_rlpa(policy_lib, delta, size, good_acts, T, index_act, index_size):
+
+
+def general_rlpa(
+    policy_lib, delta, size, good_acts, T, index_act, index_size, method
+):
     total_reward = 0
     optimal_mu = get_optimal_mu(size, good_acts, index_act, index_size)
     regret = []
@@ -83,7 +86,7 @@ def general_rlpa(policy_lib, delta, size, good_acts, T, index_act, index_size):
             K[m_B] += 1
             if mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) > c[m_B] \
                     + complex_bound(H_hat, t, delta, n[m_B], v[m_B], K[m_B]):
-                
+
                 policy_lib.pop(m_B, None)
 
             n[m_B] += v[m_B]
