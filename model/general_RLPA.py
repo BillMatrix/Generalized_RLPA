@@ -10,17 +10,28 @@ from utils import span, complex_bound
         delta: confidence
         size, good_acts: parameters for gridworld
         T: time horizon
+        method: off-policy policy gradient algorithm selection
+        inter: boolean, whether or not the policy found by policy gradient needs
+                to be within the coverage of the policy library
         '''
 
 
 def general_rlpa(
-    policy_lib, delta, size, good_acts, T, index_act, index_size, method
+    policy_lib, delta, size, good_acts, T, index_act, index_size, method, inter
 ):
     total_reward = 0
     optimal_mu = get_optimal_mu(size, good_acts, index_act, index_size)
     regret = []
     t = 1
     i = 0
+
+    # Determine the full coverage of actions by the policy library
+    action_coverage = [[set() for _ in range(size)] for _ in range(size)]
+
+    for policy in policy_lib.items():
+        for i in range(size):
+            for j in range(size):
+                action_coverage[i][j].add(policy[i][j])
 
     n = {}
     mu_hat = {}
@@ -66,6 +77,8 @@ def general_rlpa(
 
             m_B = max_B_key
 
+            memory = []
+
             while t_i <= T_i and t <= T and v[m_B] <= n[m_B] \
                 and mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) <= c[m_B] \
                     + complex_bound(H_hat, t, delta, n[m_B], 0, K[m_B]):
@@ -73,7 +86,12 @@ def general_rlpa(
 
                 policy = policy_lib[m_B]
 
-                x, y, r = gridworld.take_action(x, y, policy[x][y])
+                x_new, y_new, r = gridworld.take_action(x, y, policy[x][y])
+
+                memory += [(x, y, policy[x][y], r)]
+
+                x = x_new
+                y = y_new
 
                 v[max_B_key] += 1.0
                 R[max_B_key] += r
@@ -84,9 +102,9 @@ def general_rlpa(
                 t += 1
 
             K[m_B] += 1
+
             if mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) > c[m_B] \
                     + complex_bound(H_hat, t, delta, n[m_B], v[m_B], K[m_B]):
-
                 policy_lib.pop(m_B, None)
 
             n[m_B] += v[m_B]
