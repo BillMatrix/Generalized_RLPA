@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 
 # function move decides which direction to move
@@ -44,8 +45,8 @@ def assign_probs(action, good_acts):
 def state_feature(x, y, size):
     x_feature = [0.0 for _ in range(size)]
     y_feature = [0.0 for _ in range(size)]
-    x_feature[x-1] = 1.0
-    y_feature[y-1] = 1.0
+    x_feature[x] = 1.0
+    y_feature[y] = 1.0
     return x_feature + y_feature
 
 
@@ -61,3 +62,10 @@ def state_action_feature(x, y, size, a):
     a_feature = [0.0 for _ in range(4)]
     a_feature[a-1] = 1.0
     return state_feat + a_feature
+
+
+def span(T_i):
+	return math.log(T_i)
+
+def complex_bound(h_hat, t, conf, n, v, k):
+	return (h_hat + 1) * math.sqrt(48 * math.log(2 * t / conf) / (n + v)) + h_hat * k / (n + v)

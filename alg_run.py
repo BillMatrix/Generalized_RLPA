@@ -1,4 +1,6 @@
 from model.RLPA import rlpa
+from model.general_RLPA import general_rlpa
+import matplotlib.pyplot as plt
 import pickle
 
 T = 100000
@@ -42,4 +44,22 @@ for i in scenarios[0]:
         open('optimal_policies/mdp_{0}_size_{1}'.format(str(i), str(0)), 'rb')
     )
 regret_rlpa = rlpa(policy_lib, 0.005, sizes[0], good_actions[0], T, 0, 0)
-print(regret_rlpa)
+# print(regret_rlpa)
+regret_general_rlpa = general_rlpa(
+    policy_lib,
+    0.05,
+    sizes[0],
+    good_actions[0],
+    T,
+    0,
+    0,
+    'offpol_a3c',
+    True,
+)
+# print(regret_general_rlpa)
+t = [i for i in range(T)]
+plt.figure()
+plt.plot(t, regret_rlpa, label='RLPA')
+plt.plot(t, regret_general_rlpa, label='General_RLPA')
+plt.legend()
+plt.show()

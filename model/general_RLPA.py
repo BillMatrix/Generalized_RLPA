@@ -2,6 +2,9 @@ from environment.grid_world import GridWorld
 import numpy as np
 from optimal_mu import get_optimal_mu
 from utils import span, complex_bound
+from offpolicy_actor_critic.actor_critic import OffpolicyActorCritic
+from importance_sampling.importance_sampling import importance_sampling
+import copy
 
 
 ''' General RLPA Algorithm
@@ -11,8 +14,8 @@ from utils import span, complex_bound
         size, good_acts: parameters for gridworld
         T: time horizon
         method: off-policy policy gradient algorithm selection
-        inter: boolean, whether or not the policy found by policy gradient needs
-                to be within the coverage of the policy library
+        inter: boolean, whether or not the policy found by policy gradient
+                needs to be within the coverage of the policy library
         '''
 
 
@@ -26,12 +29,12 @@ def general_rlpa(
     i = 0
 
     # Determine the full coverage of actions by the policy library
-    action_coverage = [[set() for _ in range(size)] for _ in range(size)]
-
-    for policy in policy_lib.items():
-        for i in range(size):
-            for j in range(size):
-                action_coverage[i][j].add(policy[i][j])
+    # action_coverage = [[set() for _ in range(size)] for _ in range(size)]
+    #
+    # for policy in policy_lib.items():
+    #     for i in range(size):
+    #         for j in range(size):
+    #             action_coverage[i][j].add(policy[i][j])
 
     n = {}
     mu_hat = {}
@@ -39,6 +42,12 @@ def general_rlpa(
     K = {}
 
     for key, _ in policy_lib.items():
+        # transform policy into stochastic policies
+        for i in range(size):
+            for j in range(size):
+                action = policy_lib[key][i][j]
+                policy_lib[key][i][j] = [0.0 for _ in range(4)]
+                policy_lib[key][i][j][action - 1] = 1.0
         n[key] = 1.0
         mu_hat[key] = 0.0
         R[key] = 0.0
@@ -86,9 +95,12 @@ def general_rlpa(
 
                 policy = policy_lib[m_B]
 
-                x_new, y_new, r = gridworld.take_action(x, y, policy[x][y])
+                # sample stochastic policy
+                move_direction = np.random.choice(4, 1, p=policy[x][y])[0] + 1
 
-                memory += [(x, y, policy[x][y], r)]
+                x_new, y_new, r = gridworld.take_action(x, y, move_direction)
+
+                memory += [(x, y, move_direction, r)]
 
                 x = x_new
                 y = y_new
@@ -103,12 +115,42 @@ def general_rlpa(
 
             K[m_B] += 1
 
-            if mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) > c[m_B] \
-                    + complex_bound(H_hat, t, delta, n[m_B], v[m_B], K[m_B]):
-                policy_lib.pop(m_B, None)
+            # if mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) > c[m_B] \
+            #         + complex_bound(H_hat, t, delta, n[m_B], v[m_B], K[m_B]):
+            #     policy_lib.pop(m_B, None)
+            #     continue
 
             n[m_B] += v[m_B]
 
             mu_hat[m_B] = R[m_B] / n[m_B]
+
+            # Derive new policy here
+            new_policy = []
+            if method == 'offpol_a3c':
+                # use off-policy actor critic algorithm
+                offpol_a3c = OffpolicyActorCritic(size)
+                new_policy = offpol_a3c.derive_new_policy(
+                    memory,
+                    policy_lib[m_B]
+                )
+
+            # if inter:
+            #     for i in range(size):
+            #         for j in range(size):
+            #             if not (new_policy[i][j] in action_coverage[i][j]):
+            #                 continue
+
+            exp_val, stdev = importance_sampling(
+                new_policy,
+                memory,
+                policy_lib[m_B]
+            )
+            # if the lower bound of new policy is higher than the higher
+            # bound of the cur policy, replace the old with new
+            if exp_val > mu_hat[m_B]:
+                print('new_policy_found')
+                policy_lib[m_B] = copy.deepcopy(new_policy)
+                mu_hat[m_B] = exp_val
+                B[m_B] = exp_val + 1.96 * stdev
 
     return regret
