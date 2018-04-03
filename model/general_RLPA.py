@@ -20,10 +20,17 @@ import copy
 
 
 def general_rlpa(
-    policy_lib, delta, size, good_acts, T, index_act, index_size, method, inter
+    policy_lib, delta, size, good_acts, T, ind_act, ind_size, method, inter
 ):
     total_reward = 0
-    optimal_mu = get_optimal_mu(size, good_acts, index_act, index_size)
+
+    init_x = np.random.random_integers(0, size - 1, 1)
+    init_y = np.random.random_integers(0, size - 1, 1)
+
+    x = int(init_x[0])
+    y = int(init_y[0])
+
+    optimal_mu = get_optimal_mu(size, good_acts, ind_act, ind_size, x, y, T)
     regret = []
     t = 1
     i = 0
@@ -52,12 +59,6 @@ def general_rlpa(
         mu_hat[key] = 0.0
         R[key] = 0.0
         K[key] = 1.0
-
-    init_x = np.random.random_integers(0, size - 1, 1)
-    init_y = np.random.random_integers(0, size - 1, 1)
-
-    x = int(init_x[0])
-    y = int(init_y[0])
 
     while t <= T:
         t_i = 0
@@ -123,6 +124,9 @@ def general_rlpa(
             n[m_B] += v[m_B]
 
             mu_hat[m_B] = R[m_B] / n[m_B]
+
+            if t_i < 100:
+                continue
 
             # Derive new policy here
             new_policy = []
