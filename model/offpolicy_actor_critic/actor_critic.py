@@ -1,6 +1,7 @@
 import numpy as np
-from utils import state_feature, state_action_feature
+from utils import state_feature, state_action_feature, KL_Diverge
 import math
+from tqdm import tqdm
 
 
 class OffpolicyActorCritic():
@@ -56,7 +57,13 @@ class OffpolicyActorCritic():
         v = np.random.uniform(-0.03, 0.03, 2 * self.size)
         u = np.random.uniform(-0.03, 0.03, 2 * self.size + 4)
         T = len(data_samples)
-        for i in range(T - 1):
+
+        policy = [
+            [[0.0, 0.0, 0.0, 0.0] for _ in range(self.size)]
+            for _ in range(self.size)
+        ]
+
+        for i in tqdm(range(T - 1)):
             cur_state = (data_samples[i][0], data_samples[i][1])
             next_state = (data_samples[i + 1][0], data_samples[i + 1][1])
             action = data_samples[i][2]
@@ -99,13 +106,16 @@ class OffpolicyActorCritic():
                 action,
             ) + self.lam * e_u)
 
-            u += self.lr_u * delta * e_u
+            temp_u = u + self.lr_u * delta * e_u
 
-        # Construct policy based on u
-        policy = [
-            [[0.0, 0.0, 0.0, 0.0] for _ in range(self.size)]
-            for _ in range(self.size)
-        ]
+            for i in range(self.size):
+                for j in range(self.size):
+                    for k in range(4):
+                        policy[i][j][k] = self.compute_action_prob(
+                            temp_u, i, j, k + 1)
+
+            if not KL_Diverge(policy, behavior_pol, data_samples):
+                u = temp_u
 
         for i in range(self.size):
             for j in range(self.size):

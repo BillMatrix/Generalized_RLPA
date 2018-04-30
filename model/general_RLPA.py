@@ -7,6 +7,20 @@ from importance_sampling.importance_sampling import importance_sampling
 import copy
 
 
+def update_behavior_pol(behavior_pol, new_policy, t, size):
+    if len(behavior_pol) == 0:
+        behavior_pol = copy.deepcopy(new_policy)
+    else:
+        for i in range(size):
+            for j in range(size):
+                for k in range(4):
+                    behavior_pol[i][j][k] = float(
+                        t * behavior_pol[i][j][k] + new_policy[i][j][k]
+                    ) / (t + 1)
+
+    return behavior_pol
+
+
 ''' General RLPA Algorithm
     args:
         policy_lib: policy library contains all policy advice
@@ -31,17 +45,13 @@ def general_rlpa(
     y = int(init_y[0])
 
     optimal_mu = get_optimal_mu(size, good_acts, ind_act, ind_size, x, y, T)
+
+    agg_memory = []
+    behavior_pol = []
+
     regret = []
     t = 1
     i = 0
-
-    # Determine the full coverage of actions by the policy library
-    # action_coverage = [[set() for _ in range(size)] for _ in range(size)]
-    #
-    # for policy in policy_lib.items():
-    #     for i in range(size):
-    #         for j in range(size):
-    #             action_coverage[i][j].add(policy[i][j])
 
     n = {}
     mu_hat = {}
@@ -96,11 +106,22 @@ def general_rlpa(
 
                 policy = policy_lib[m_B]
 
+                behavior_pol = update_behavior_pol(
+                    behavior_pol,
+                    policy,
+                    t,
+                    size,
+                )
+
                 # sample stochastic policy
                 move_direction = np.random.choice(4, 1, p=policy[x][y])[0] + 1
+                while policy[x][y][move_direction - 1] <= 0.00005:
+                    move_direction = np.random.choice(
+                        4, 1, p=policy[x][y])[0] + 1
 
                 x_new, y_new, r = gridworld.take_action(x, y, move_direction)
 
+                agg_memory += [(x, y, move_direction, r)]
                 memory += [(x, y, move_direction, r)]
 
                 x = x_new
@@ -116,11 +137,6 @@ def general_rlpa(
 
             K[m_B] += 1
 
-            # if mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) > c[m_B] \
-            #         + complex_bound(H_hat, t, delta, n[m_B], v[m_B], K[m_B]):
-            #     policy_lib.pop(m_B, None)
-            #     continue
-
             n[m_B] += v[m_B]
 
             mu_hat[m_B] = R[m_B] / n[m_B]
@@ -130,31 +146,69 @@ def general_rlpa(
 
             # Derive new policy here
             new_policy = []
+            exp_val = 0
+            stdev = 0
+
             if method == 'offpol_a3c':
                 # use off-policy actor critic algorithm
                 offpol_a3c = OffpolicyActorCritic(size)
+                print('deriving_new_policy')
                 new_policy = offpol_a3c.derive_new_policy(
                     memory,
                     policy_lib[m_B]
                 )
+                exp_val, stdev = importance_sampling(
+                    new_policy,
+                    memory,
+                    policy_lib[m_B],
+                )
+                # if the lower bound of new policy is higher than higher
+                # bound of the cur policy, replace the old with new
+                if exp_val > mu_hat[m_B]:
+                    print('new_policy_found')
+                    index = max(policy_lib) + 1
+                    policy_lib[index] = new_policy
+                    mu_hat[index] = exp_val
+                    B[index] = exp_val + 1.96 * stdev
+                    n[index] = n[m_B]
+                    K[index] = K[m_B]
+                    R[index] = 0.0
 
-            # if inter:
-            #     for i in range(size):
-            #         for j in range(size):
-            #             if not (new_policy[i][j] in action_coverage[i][j]):
-            #                 continue
+            elif method == 'offpol_a3c_agg':
+                # use off-policy actor critic algorithm with aggregate memory
+                offpol_a3c = OffpolicyActorCritic(size)
+                print('deriving_new_policy')
+                new_policy = offpol_a3c.derive_new_policy(
+                    agg_memory,
+                    behavior_pol,
+                )
+                exp_val, stdev = importance_sampling(
+                    new_policy,
+                    agg_memory,
+                    behavior_pol,
+                )
+                # if the lower bound of new policy is higher than higher
+                # bound of the cur policy, replace the old with new
+                if exp_val > mu_hat[m_B]:
+                    print('new_policy_found')
+                    index = max(policy_lib) + 1
+                    policy_lib[index] = new_policy
+                    mu_hat[index] = exp_val
+                    B[index] = exp_val + 1.96 * stdev
+                    n[index] = n[m_B]
+                    K[index] = K[m_B]
+                    R[index] = 0.0
 
-            exp_val, stdev = importance_sampling(
-                new_policy,
-                memory,
-                policy_lib[m_B]
-            )
-            # if the lower bound of new policy is higher than the higher
-            # bound of the cur policy, replace the old with new
-            if exp_val > mu_hat[m_B]:
-                print('new_policy_found')
-                policy_lib[m_B] = copy.deepcopy(new_policy)
-                mu_hat[m_B] = exp_val
-                B[m_B] = exp_val + 1.96 * stdev
+            if mu_hat[m_B] - R[m_B] / (n[m_B] + v[m_B]) > c[m_B] \
+                    + complex_bound(H_hat, t, delta, n[m_B], v[m_B], K[m_B]):
+                policy_lib.pop(m_B, None)
+                c.pop(m_B, None)
+                B.pop(m_B, None)
+                v.pop(m_B, None)
+                n.pop(m_B, None)
+                mu_hat.pop(m_B, None)
+                R.pop(m_B, None)
+                K.pop(m_B, None)
+                continue
 
     return regret

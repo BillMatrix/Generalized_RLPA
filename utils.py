@@ -64,6 +64,38 @@ def state_action_feature(x, y, size, a):
     return state_feat + a_feature
 
 
+# KL Divergence of two policies
+# args:
+#   new_policy: derived policy
+#   behavior_pol: behavior policy used so far
+#   data_samples: history
+def KL_Diverge(new_policy, behavior_pol, data_samples):
+    p_new = 1.0
+    p_new_over_p_beh = 1.0
+    KL = 0.0
+    T = len(data_samples)
+    record = []
+    for i in range(T):
+        cur_state = (data_samples[i][0], data_samples[i][1])
+        cur_action = data_samples[i][2]
+        prob_beh_policy_cur_action \
+            = behavior_pol[cur_state[0]][cur_state[1]][cur_action - 1]
+        prob_new_policy_cur_action \
+            = new_policy[cur_state[0]][cur_state[1]][cur_action - 1]
+        p_new = p_new * prob_new_policy_cur_action
+        record += [prob_new_policy_cur_action / prob_beh_policy_cur_action]
+        p_new_over_p_beh = p_new_over_p_beh * \
+            prob_new_policy_cur_action / prob_beh_policy_cur_action
+        if i >= 5000:
+            p_new_over_p_beh = p_new_over_p_beh / record[i - 5000]
+        if p_new <= 0:
+            KL -= 1
+        else:
+            KL += p_new * math.log(p_new_over_p_beh)
+
+    return abs(KL) > T * 0.1
+
+
 def span(T_i):
 	return math.log(T_i)
 
