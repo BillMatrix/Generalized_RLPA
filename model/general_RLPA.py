@@ -7,7 +7,9 @@ from offpolicy_actor_critic.actor_critic import OffpolicyActorCritic
 from importance_sampling.importance_sampling import importance_sampling
 import copy
 
-sys.path.append('./model')
+sys.path.append('./model/importance_sampling')
+sys.path.append('./model/offpolicy_actor_critic')
+sys.path.append('./model/policy_reuse')
 
 
 def update_behavior_pol(behavior_pol, new_policy, t, size):
