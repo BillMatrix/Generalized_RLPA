@@ -2,6 +2,9 @@ import numpy as np
 from utils import state_feature, state_action_feature, KL_Diverge
 import math
 from tqdm import tqdm
+import os.path
+import sys
+sys.path.append(os.path.join(os.path.dirname(__file__), '..'))
 
 
 class OffpolicyActorCritic():
