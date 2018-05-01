@@ -1,4 +1,4 @@
-from model.environment.grid_world import GridWorld
+from environment.grid_world import GridWorld
 import numpy as np
 from optimal_mu import get_optimal_mu
 from utils import span, complex_bound
