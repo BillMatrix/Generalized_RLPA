@@ -1,3 +1,4 @@
+import sys
 from environment.grid_world import GridWorld
 import numpy as np
 from optimal_mu import get_optimal_mu
@@ -5,6 +6,8 @@ from utils import span, complex_bound
 from offpolicy_actor_critic.actor_critic import OffpolicyActorCritic
 from importance_sampling.importance_sampling import importance_sampling
 import copy
+
+sys.path.append('./model')
 
 
 def update_behavior_pol(behavior_pol, new_policy, t, size):
