@@ -55,6 +55,8 @@ class PolicyIteration:
             4: [1, 0],
         }
 
+        self.gamma = 0.9
+
     '''Get transition probability
     args:
         x, y: coordinate to identify invalid actions (state)
@@ -138,7 +140,8 @@ class PolicyIteration:
                             next_state_value = self.value_matrix[new_x][new_y]
 
                             # add projected value to q value of current action
-                            q[i] += probs[j] * (reward + next_state_value)
+                            q[i] += probs[j] \
+                                * self.gamma * (reward + next_state_value)
 
                         # Update the current best policy
                         if q[i] > best_q:
