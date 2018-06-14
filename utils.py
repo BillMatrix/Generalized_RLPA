@@ -20,7 +20,7 @@ def move(probs):
 # rets:
 #   a vector of probabilities of length 5 with index 1 to 4 corresponding to
 #   the actions and 0 corresponding to not moving
-def assign_probs(action, good_acts):
+def assign_probs_for_RLPA_exp(action, good_acts):
     probs = [0.0 for i in range(5)]
     if action in good_acts:
         for i in range(1, 5):
@@ -35,6 +35,16 @@ def assign_probs(action, good_acts):
 
     return probs
 
+
+def assign_probs_new_exp(action):
+    if action == 1:
+        return [0.0, 0.85, 0.05, 0.05, 0.05]
+    elif action == 2:
+        return [0.0, 0.0, 0.8, 0.0, 0.2]
+    elif action == 3:
+        return [0.0, 0.05, 0.05, 0.85, 0.05]
+    else:
+        return [0.0, 0.8, 0.0, 0.2, 0.0]
 
 # function to extract features from a state from a gridworld
 # args:

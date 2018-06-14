@@ -1,6 +1,6 @@
-from environment.grid_world import GridWorld
+from environment.grid_world import NewGridWorld
 import numpy as np
-from optimal_mu import get_optimal_mu
+from optimal_mu import get_optimal_mu_new
 from utils import span, complex_bound
 from model.offpolicy_actor_critic.actor_critic import OffpolicyActorCritic
 from model.importance_sampling.importance_sampling import importance_sampling
@@ -35,25 +35,20 @@ def update_behavior_pol(behavior_pol, new_policy, t, size):
 
 
 def general_rlpa(
-    policy_lib, delta, size, good_acts, T, ind_act, ind_size, method, inter
+    policy_lib, delta, size, T, method, inter, optimal_mu
 ):
     direct_dict = {
         (0, 0): 0,
-        (0, 1): 1,
-        (0, -1): 2,
+        (0, -1): 1,
+        (0, 1): 2,
         (-1, 0): 3,
         (1, 0): 4,
     }
 
     total_reward = 0
 
-    init_x = np.random.random_integers(0, size - 1, 1)
-    init_y = np.random.random_integers(0, size - 1, 1)
-
-    x = int(init_x[0])
-    y = int(init_y[0])
-
-    optimal_mu = get_optimal_mu(size, good_acts, ind_act, ind_size, x, y, T)
+    x = size - 1
+    y = size - 1
 
     agg_memory = []
     behavior_pol = []
@@ -102,7 +97,7 @@ def general_rlpa(
 
     horizon = T
     if method == 'robust_dp' or method == 'dp':
-        horizon = T / 2
+        horizon = min(2000, T)
 
     while t <= horizon:
         t_i = 0
@@ -110,7 +105,7 @@ def general_rlpa(
         H_hat = span(T_i)
         i += 1
 
-        gridworld = GridWorld(good_acts, size)
+        gridworld = NewGridWorld(size)
 
         while t_i <= T_i and t <= horizon and len(policy_lib) != 0:
             print(t)
@@ -149,9 +144,9 @@ def general_rlpa(
 
                 # sample stochastic policy
                 move_direction = np.random.choice(4, 1, p=policy[x][y])[0] + 1
-                while policy[x][y][move_direction - 1] <= 0.00005:
-                    move_direction = np.random.choice(
-                        4, 1, p=policy[x][y])[0] + 1
+                # while policy[x][y][move_direction - 1] <= 0.00005:
+                #     move_direction = np.random.choice(
+                #         4, 1, p=policy[x][y])[0] + 1
 
                 x_new, y_new, r = gridworld.take_action(x, y, move_direction)
 
@@ -172,7 +167,7 @@ def general_rlpa(
 
                 v[max_B_key] += 1.0
                 R[max_B_key] += r
-                total_reward += r
+                total_reward = total_reward + r
 
                 regret += [optimal_mu - float(total_reward) / float(t)]
 
@@ -266,7 +261,7 @@ def general_rlpa(
             # sample stochastic policy
             x, y, r = gridworld.take_action(x, y, policy[x][y] + 1)
 
-            total_reward += r
+            total_reward = total_reward + r
 
             regret += [optimal_mu - float(total_reward) / float(t)]
 

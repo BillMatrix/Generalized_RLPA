@@ -42,6 +42,32 @@ for i in range(6, len(good_actions)):
             )
 
         temp_policy_lib = copy.deepcopy(policy_lib)
+        regret_robust_dp = general_rlpa(
+            temp_policy_lib,
+            0.005,
+            size,
+            good_actions[i],
+            T,
+            i,
+            size,
+            'robust_dp',
+            True,
+        )
+
+        temp_policy_lib = copy.deepcopy(policy_lib)
+        regret_dp = general_rlpa(
+            temp_policy_lib,
+            0.005,
+            size,
+            good_actions[i],
+            T,
+            i,
+            size,
+            'dp',
+            True,
+        )
+
+        temp_policy_lib = copy.deepcopy(policy_lib)
         regret_rlpa = rlpa(
             temp_policy_lib,
             0.005,
@@ -65,21 +91,21 @@ for i in range(6, len(good_actions)):
             True,
         )
 
-        temp_policy_lib = copy.deepcopy(policy_lib)
-        regret_general_rlpa_agg = general_rlpa(
-            temp_policy_lib,
-            0.005,
-            size,
-            good_actions[i],
-            T,
-            i,
-            size,
-            'offpol_a3c_agg',
-            True,
-        )
+        # temp_policy_lib = copy.deepcopy(policy_lib)
+        # regret_general_rlpa_agg = general_rlpa(
+        #     temp_policy_lib,
+        #     0.005,
+        #     size,
+        #     good_actions[i],
+        #     T,
+        #     i,
+        #     size,
+        #     'offpol_a3c_agg',
+        #     True,
+        # )
 
-        regret_pr = np.array([0.0 for i in range(T)])
-        for i in range(10):
+        regret_pr = np.array([0.0 for _ in range(T)])
+        for _ in range(10):
             temp_policy_lib = copy.deepcopy(policy_lib)
             regret_policy_reuse = policy_reuse(
                 temp_policy_lib,
@@ -97,35 +123,37 @@ for i in range(6, len(good_actions)):
         plt.figure()
         plt.plot(t, regret_rlpa, label='RLPA')
         plt.plot(t, regret_general_rlpa_cur, label='General_RLPA_CUR')
-        plt.plot(t, regret_general_rlpa_agg, label='General_RLPA_AGG')
+        # plt.plot(t, regret_general_rlpa_agg, label='General_RLPA_AGG')
         plt.plot(t, regret_pr, label='Policy Reuse')
+        plt.plot(t, regret_robust_dp, label='Robust DP')
+        plt.plot(t, regret_dp, label='DP')
         plt.legend()
         plt.savefig(
             './alg_regret_plot/{0}_{1}_{2}.png'.format(
                 str(size), str(good_actions[i]), str(scenario)
             )
         )
-        pickle.dump(
-            regret_rlpa,
-            open('./alg_regret/regret_rlpa_{0}_{1}_{2}.pkl'.format(
-                str(size), str(good_actions[i]), str(scenario)
-            ), 'wb'),
-        )
-        pickle.dump(
-            regret_general_rlpa_cur,
-            open('./alg_regret/regret_g_rlpa_cur_{0}_{1}_{2}.pkl'.format(
-                str(size), str(good_actions[i]), str(scenario)
-            ), 'wb'),
-        )
-        pickle.dump(
-            regret_general_rlpa_agg,
-            open('./alg_regret/regret_g_rlpa_agg_{0}_{1}_{2}.pkl'.format(
-                str(size), str(good_actions[i]), str(scenario)
-            ), 'wb'),
-        )
-        pickle.dump(
-            regret_pr,
-            open('./alg_regret/regret_pr_{0}_{1}_{2}.pkl'.format(
-                str(size), str(good_actions[i]), str(scenario)
-            ), 'wb'),
-        )
+        # pickle.dump(
+        #     regret_rlpa,
+        #     open('./alg_regret/regret_rlpa_{0}_{1}_{2}.pkl'.format(
+        #         str(size), str(good_actions[i]), str(scenario)
+        #     ), 'wb'),
+        # )
+        # pickle.dump(
+        #     regret_general_rlpa_cur,
+        #     open('./alg_regret/regret_g_rlpa_cur_{0}_{1}_{2}.pkl'.format(
+        #         str(size), str(good_actions[i]), str(scenario)
+        #     ), 'wb'),
+        # )
+        # pickle.dump(
+        #     regret_general_rlpa_agg,
+        #     open('./alg_regret/regret_g_rlpa_agg_{0}_{1}_{2}.pkl'.format(
+        #         str(size), str(good_actions[i]), str(scenario)
+        #     ), 'wb'),
+        # )
+        # pickle.dump(
+        #     regret_pr,
+        #     open('./alg_regret/regret_pr_{0}_{1}_{2}.pkl'.format(
+        #         str(size), str(good_actions[i]), str(scenario)
+        #     ), 'wb'),
+        # )
