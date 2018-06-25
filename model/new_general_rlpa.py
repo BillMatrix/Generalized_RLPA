@@ -8,6 +8,8 @@ from model.robust_dynamic_programming.robust_dp import RobustDP
 import copy
 
 
+''' Given an old behavior policy, and a new policy applied to one step, update
+    the behavior policy '''
 def update_behavior_pol(behavior_pol, new_policy, t, size):
     if len(behavior_pol) == 0:
         behavior_pol = copy.deepcopy(new_policy)
@@ -21,6 +23,40 @@ def update_behavior_pol(behavior_pol, new_policy, t, size):
 
     return behavior_pol
 
+
+def initialize(policy_lib):
+    core_rewards = {}
+    core_transitions = {}
+    for key, _ in policy_lib.items():
+        # transform policy into stochastic policies
+        for i in range(size):
+            for j in range(size):
+                action = policy_lib[key][i][j]
+                policy_lib[key][i][j] = [0.0 for _ in range(4)]
+                policy_lib[key][i][j][action - 1] = 1.0
+        n[key] = 1.0
+        mu_hat[key] = 0.0
+        R[key] = 0.0
+        K[key] = 1.0
+        transitions[key] = [
+            [[[1 for _ in range(5)] for _ in range(4)] for _ in range(size)]
+            for _ in range(size)
+        ]
+        rewards[key] = [
+            [0.0 for _ in range(size)]
+            for _ in range(size)
+        ]
+
+    core_transitions[0] = [
+        [[[1 for _ in range(5)] for _ in range(4)] for _ in range(size)]
+        for _ in range(size)
+    ]
+    core_rewards[0] = [
+        [0.0 for _ in range(size)]
+        for _ in range(size)
+    ]
+
+    return policy_lib, core_transitions, core_rewards
 
 ''' General RLPA Algorithm
     args:
@@ -62,38 +98,10 @@ def general_rlpa(
     R = {}
     K = {}
     transitions = {}
-    core_transitions = {}
+
     rewards = {}
-    core_rewards = {}
 
-    for key, _ in policy_lib.items():
-        # transform policy into stochastic policies
-        for i in range(size):
-            for j in range(size):
-                action = policy_lib[key][i][j]
-                policy_lib[key][i][j] = [0.0 for _ in range(4)]
-                policy_lib[key][i][j][action - 1] = 1.0
-        n[key] = 1.0
-        mu_hat[key] = 0.0
-        R[key] = 0.0
-        K[key] = 1.0
-        transitions[key] = [
-            [[[1 for _ in range(5)] for _ in range(4)] for _ in range(size)]
-            for _ in range(size)
-        ]
-        rewards[key] = [
-            [0.0 for _ in range(size)]
-            for _ in range(size)
-        ]
-
-    core_transitions[0] = [
-        [[[1 for _ in range(5)] for _ in range(4)] for _ in range(size)]
-        for _ in range(size)
-    ]
-    core_rewards[0] = [
-        [0.0 for _ in range(size)]
-        for _ in range(size)
-    ]
+    policy_lib, core_transitions, core_rewards = initialize(policy_lib)
 
     horizon = T
     if method == 'robust_dp' or method == 'dp':

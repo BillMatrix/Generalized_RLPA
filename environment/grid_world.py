@@ -1,76 +1,30 @@
-from utils import move, assign_probs_for_RLPA_exp, assign_probs_new_exp
+from utils import move
 
 
 class GridWorld:
-    '''GridWord initialization:
-        args:
-            good_acts: indicating what are good actions in this girdworld.
-            size: since gridworld is a square, we need the side length'''
-    def __init__(self, good_acts, size):
-        self.good_acts = good_acts
-        self.size = size
-
-    '''funtion used for an agent to take an action
-        args:
-            x, y: coordinates of the agent
-            action: in {1, 2, 3, 4}, the action agent wants to take.
-            1 up 2 down 3 left 4 right'''
-    def take_action(self, x, y, action):
-        # assign probability according to the chosen action
-        # and the good action set
-        probs = assign_probs_for_RLPA_exp(action, self.good_acts)
-
-        # randomly select the move direction according to
-        # the distribution of probabilities
-        move_direction = move(probs)
-
-        new_x = x
-        new_y = y
-
-        if move_direction == 1 and y < self.size - 1:
-            new_y += 1
-        elif move_direction == 2 and y > 0:
-            new_y -= 1
-        elif move_direction == 3 and x > 0:
-            new_x -= 1
-        elif move_direction == 4 and x < self.size - 1:
-            new_x += 1
-
-        if new_x == 0:
-            if new_y == 0:
-                return [new_x, new_y, 0.9]
-            elif new_y == self.size - 1:
-                return [new_x, new_y, 0.7]
-        elif new_x == self.size - 1:
-            if new_y == 0:
-                return [new_x, new_y, 1.0]
-            elif new_y == self.size - 1:
-                return [new_x, new_y, 0.8]
-
-        return [new_x, new_y, -1.0]
-
-
-class NewGridWorld:
 
     def __init__(self, size):
         self.size = size
+        self.move_prob = [
+            [0.8, 0.0, 0.2, 0.0, 0.0],
+            [0.0, 0.8, 0.0, 0.2, 0.0],
+            [0.2, 0.0, 0.8, 0.0, 0.0],
+            [0.0, 0.2, 0.0, 0.8, 0.0],
+        ]
 
     '''funtion used for an agent to take an action
         args:
             x, y: coordinates of the agent
-            action: in {1, 2, 3, 4}, the action agent wants to take.
-            1 up 2 down 3 left 4 right'''
-    def take_action(self, x, y, action):
-        # assign probability according to the chosen action
-        # and the good action set
-        probs = assign_probs_new_exp(action)
+            action: in {0, 1, 2, 3}, the action agent wants to take.
+            0 up 1 down 2 left 3 right'''
+    def take_action(self, state, action):
 
         # randomly select the move direction according to
         # the distribution of probabilities
-        move_direction = move(probs)
+        move_direction = move(self.move_prob)
 
-        new_x = x
-        new_y = y
+        new_x = state[0]
+        new_y = state[1]
 
         if move_direction == 1 and y > 0:
             new_y -= 1
@@ -81,13 +35,13 @@ class NewGridWorld:
         elif move_direction == 4 and x < self.size - 1:
             new_x += 1
 
-        if new_x == self.size - 1 and new_y == self.size - 1:
-            return [new_x, new_y, 0.0]
-        elif new_x == 0 and new_y == 0:
+        if new_x == 0 and new_y == 0:
             return [new_x, new_y, 100.0]
         elif new_x == 0 and new_y == self.size - 1:
             return [new_x, new_y, 10.0]
         elif new_x == self.size - 1 and new_y == 0:
             return [new_x, new_y, 10.0]
+        elif new_x >= self.size / 2 and new_y >= self.size / 2:
+            return [new_x, new_y, -1.0]
 
         return [new_x, new_y, 0.0]
