@@ -10,14 +10,10 @@ class PolicyIteration:
         stores:
             good_actions, size, value_matrix, reward_matrix,
             policy_matrix, invalid actions (at corner)'''
-    def __init__(self, size, good_acts):
-        self.good_acts = good_acts
-        self.size = size
+    def __init__(self, mdp):
+        self.mdp = mdp
 
-        self.value_matrix = [
-            [0.0 for _ in range(size)]
-            for _ in range(size)
-        ]
+        self.value_matrix =
 
         self.reward_matrix = [
             [0.0 for _ in range(size)]

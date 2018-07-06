@@ -2,6 +2,18 @@ import numpy as np
 import math
 
 
+def transform_policy_from_deterministic_to_stochastic(policy_lib):
+    for key, _ in policy_lib.items():
+        # transform policy into stochastic policies
+        for i in range(size):
+            for j in range(size):
+                action = policy_lib[key][i][j]
+                policy_lib[key] = {}
+                policy_lib[key][(i, j)] = [0.0 for _ in range(4)]
+                policy_lib[key][(i, j)][action] = 1.0
+
+    return policy_lib
+
 # function move decides which direction to move
 # args:
 #   probs: probability given a taken action
