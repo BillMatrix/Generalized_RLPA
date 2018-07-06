@@ -1,7 +1,7 @@
 from environment.grid_world import GridWorld
-import numpy as np
 from utils import span, complex_bound
-from general_rlpa_agent import GeneralRLPAAgent
+from algorithm.core.general_rlpa_agent import GeneralRLPAAgent
+from optimal_mu import get_optimal_mu
 
 
 def general_rlpa(policy_lib, delta, size, T):
@@ -35,6 +35,9 @@ def general_rlpa(policy_lib, delta, size, T):
                 and pol.mu_hat - pol.R / (pol.n + pol.v) <= pol.c + \
                     complex_bound(H_hat, t, delta, pol.n, pol.v, pol.K):
                 t_i += 1
+
+                if t % 50 == 0:
+                    agent.state = (init_x, init_y)
 
                 agent.state, r = agent.take_action()
 

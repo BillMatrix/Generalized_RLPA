@@ -2,17 +2,18 @@ import numpy as np
 import math
 
 
-def transform_policy_from_deterministic_to_stochastic(policy_lib):
+def transform_policy_from_deterministic_to_stochastic(size, policy_lib):
+    new_policy_lib = {}
     for key, _ in policy_lib.items():
+        new_policy_lib[key] = {}
         # transform policy into stochastic policies
         for i in range(size):
             for j in range(size):
                 action = policy_lib[key][i][j]
-                policy_lib[key] = {}
-                policy_lib[key][(i, j)] = [0.0 for _ in range(4)]
-                policy_lib[key][(i, j)][action] = 1.0
+                new_policy_lib[key][(i, j)] = [0.0 for _ in range(4)]
+                new_policy_lib[key][(i, j)][action] = 1.0
 
-    return policy_lib
+    return new_policy_lib
 
 # function move decides which direction to move
 # args:
@@ -22,6 +23,10 @@ def transform_policy_from_deterministic_to_stochastic(policy_lib):
 #   4 stay, 0 up, 1 down, 2 left, 3 right
 def move(probs):
     return np.random.choice(5, 1, p=probs)[0]
+
+
+def select_action(probs):
+    return np.random.choice(4, 1, p=probs)[0]
 
 # function to extract features from a state from a gridworld
 # args:

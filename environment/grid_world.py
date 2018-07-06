@@ -25,18 +25,18 @@ class GridWorld:
 
         # randomly select the move direction according to
         # the distribution of probabilities
-        move_direction = move(self.move_prob)
+        move_direction = move(self.move_prob[action])
 
         new_x = state[0]
         new_y = state[1]
 
-        if move_direction == 0 and y > 0:
+        if move_direction == 0 and new_y > 0:
             new_y -= 1
-        elif move_direction == 1 and y < self.size - 1:
+        elif move_direction == 1 and new_y < self.size - 1:
             new_y += 1
-        elif move_direction == 2 and x > 0:
+        elif move_direction == 2 and new_x > 0:
             new_x -= 1
-        elif move_direction == 3 and x < self.size - 1:
+        elif move_direction == 3 and new_x < self.size - 1:
             new_x += 1
 
         if new_x == 0 and new_y == 0:

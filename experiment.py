@@ -1,78 +1,17 @@
-from model.new_rlpa import rlpa
-from model.new_general_rlpa import general_rlpa
-from model.policy_reuse.policy_reuse import policy_reuse
-from optimal_mu import get_optimal_mu_new
+from algorithm.core.general_rlpa import general_rlpa
 import matplotlib.pyplot as plt
 import copy
 
 T = 10000
-size = 5
+size = 10
+delta = 0.005
 
-policy_lib = {
-    1: [[1 for i in range(size)] for j in range(size)],
-    2: [[3 for i in range(size)] for j in range(size)],
-}
+policy_1 = [[0 for _ in range(size)] for _ in range(size)]
+policy_2 = [[2 for _ in range(size)] for _ in range(size)]
 
-optimal_mu = get_optimal_mu_new(size, size - 1, size - 1)
+policy_lib = {1: policy_1, 2: policy_2}
 
-temp_policy_lib = copy.deepcopy(policy_lib)
-regret_dp = general_rlpa(
-    temp_policy_lib,
-    0.005,
-    size,
-    T,
-    'dp',
-    True,
-    optimal_mu,
-)
-
-temp_policy_lib = copy.deepcopy(policy_lib)
-regret_rlpa = rlpa(
-    temp_policy_lib,
-    0.005,
-    size,
-    T,
-    optimal_mu,
-)
-
-# temp_policy_lib = copy.deepcopy(policy_lib)
-# regret_general_rlpa_cur = general_rlpa(
-#     temp_policy_lib,
-#     0.005,
-#     size,
-#     T,
-#     'offpol_a3c',
-#     True,
-#     optimal_mu,
-# )
-
-# temp_policy_lib = copy.deepcopy(policy_lib)
-# regret_general_rlpa_agg = general_rlpa(
-#     temp_policy_lib,
-#     0.005,
-#     size,
-#     good_actions[i],
-#     T,
-#     i,
-#     size,
-#     'offpol_a3c_agg',
-#     True,
-# )
-
-# regret_pr = np.array([0.0 for _ in range(T)])
-# for _ in range(10):
-#     temp_policy_lib = copy.deepcopy(policy_lib)
-#     regret_policy_reuse = policy_reuse(
-#         temp_policy_lib,
-#         size,
-#         good_actions[i],
-#         i,
-#         size,
-#         T / 5000,
-#         5000,
-#     )
-#     regret_pr += np.array(regret_policy_reuse)
-# regret_pr = (regret_pr / 10).tolist()
+regret_rlpa = general_rlpa(policy_lib, delta, size, T)
 
 t = [m for m in range(T)]
 plt.figure()
@@ -81,7 +20,7 @@ plt.plot(t, regret_rlpa, label='RLPA')
 # plt.plot(t, regret_general_rlpa_agg, label='General_RLPA_AGG')
 # plt.plot(t, regret_pr, label='Policy Reuse')
 # plt.plot(t, regret_robust_dp, label='Robust DP')
-plt.plot(t, regret_dp, label='DP')
+# plt.plot(t, regret_dp, label='DP')
 plt.xlabel('time')
 plt.ylabel('regret')
 plt.legend()
