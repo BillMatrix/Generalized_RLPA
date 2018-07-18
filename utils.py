@@ -2,6 +2,14 @@ import numpy as np
 import math
 
 
+def converge(new_Q, Q, diff):
+    for key, _ in new_Q.items():
+        if np.linalg.norm(np.array(new_Q[key]) - np.array(Q[key])) > diff:
+            return False
+
+    return True
+
+
 def transform_policy_from_deterministic_to_stochastic(size, policy_lib):
     new_policy_lib = {}
     for key, _ in policy_lib.items():
