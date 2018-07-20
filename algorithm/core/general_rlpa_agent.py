@@ -3,6 +3,8 @@ from utils import (
 )
 from algorithm.core.rlpa_policy_info import RLPAPolicyInfo
 from algorithm.mbie_eb import MBIEEB
+from algorithm.importance_sampling import IS
+from tqdm import tqdm
 
 
 class GeneralRLPAAgent:
@@ -28,6 +30,15 @@ class GeneralRLPAAgent:
             self.initialize_params(policy_lib)
         self.last_action = 0
         self.beta = beta
+
+        self.core_transitions = {}
+        for i in range(self.mdp.size):
+            for j in range(self.mdp.size):
+                for a in range(4):
+                    self.core_transitions[((i, j), a)] = {}
+                    for i_t in range(self.mdp.size):
+                        for j_t in range(self.mdp.size):
+                            self.core_transitions[((i, j), a)][(i_t, j_t)] = 1.
 
     def initialize_params(self, policy_lib):
         policy_info = {}
@@ -69,15 +80,6 @@ class GeneralRLPAAgent:
         return self.last_action
 
     def initialize_MBIEEB(self, gamma=0.9):
-        self.core_transitions = {}
-        for i in range(self.mdp.size):
-            for j in range(self.mdp.size):
-                for a in range(4):
-                    self.core_transitions[((i, j), a)] = {}
-                    for i_t in range(self.mdp.size):
-                        for j_t in range(self.mdp.size):
-                            self.core_transitions[((i, j), a)][(i_t, j_t)] = 1.
-
         self.rewards = {}
         for i in range(self.mdp.size):
             for j in range(self.mdp.size):
@@ -127,3 +129,44 @@ class GeneralRLPAAgent:
 
     def drop_current_policy(self):
         self.policy_info.pop(self.max_B_key)
+
+    def initialize_IS(self):
+        self.data_samples = []
+
+    def update_IS(self, sample):
+        self.data_samples += [sample]
+        for s in sample[1]:
+            action = self.current_policy.policy[s[0]].index(
+                max(self.current_policy.policy[s[0]])
+            )
+            self.core_transitions[(s[0], action)][s[2]] += 1.
+
+    def compute_best_interpolated_pol(self):
+        best_policy = None
+        best_policy_value = -1000.0
+        for pol_ind in tqdm(range(2 ** (self.mdp.size * self.mdp.size))):
+            pol = {}
+            format = '{0:0' + str(self.mdp.size * self.mdp.size) + 'b}'
+            assignment = format.format(pol_ind)
+            for i in range(self.mdp.size):
+                for j in range(self.mdp.size):
+                    if assignment[i * self.mdp.size + j] == '1':
+                        pol[(i, j)] = [0., 0., 1., 0.]
+                    else:
+                        pol[(i, j)] = [1., 0., 0., 0.]
+            is_agent = IS(
+                self.mdp,
+                pol,
+                self.data_samples,
+                self.policy_info,
+                self.core_transitions,
+            )
+            l_bound = is_agent.compute_lower_bound()
+            if l_bound > best_policy_value:
+                best_policy_value = l_bound
+                best_policy = pol
+
+        if best_policy_value > self.max_B[0]:
+            print('found better policy')
+            self.policy_info[self.max_B_key].policy = best_policy
+            self.policy_info[self.max_B_key].B = best_policy_value

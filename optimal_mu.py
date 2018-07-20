@@ -25,7 +25,7 @@ def get_optimal_mu(mdp):
 
     while abs(avg_reward - new_avg_reward) > 0.001:
         avg_reward = new_avg_reward
-        state, r = mdp.take_action((x, y), policy[x][y])
+        state, r = mdp.take_action((x, y), policy[int(x)][int(y)])
         x = state[0]
         y = state[1]
         t += 1
